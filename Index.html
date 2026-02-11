@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AT&amp;T VAR Program Payout Calculator</title>
+
+  <style>
+    :root{
+      /* AT&T-ish blues */
+      --att-blue: #00A8E0;
+      --att-blue-deep: #0077BE;
+      --att-navy: #0B1220;
+
+      --bg: #F3F7FB;
+      --card: #FFFFFF;
+      --text: #0F172A;
+      --muted: #64748B;
+      --line: #E5E7EB;
+      --soft: #F8FAFC;
+
+      --shadow: 0 18px 55px rgba(2, 8, 23, .12);
+      --radius: 16px;
+      --radius-sm: 12px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1000px 520px at 20% 0%, rgba(0,168,224,.22), transparent 60%),
+        radial-gradient(900px 520px at 85% 10%, rgba(0,119,190,.18), transparent 60%),
+        linear-gradient(180deg, #ffffff, var(--bg) 30%, var(--bg));
+      padding: 40px 18px;
+    }
+
+    .container{
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .hero{
+      border-radius: 20px;
+      padding: 22px 22px;
+      background: linear-gradient(135deg, rgba(0,168,224,.18), rgba(0,119,190,.14));
+      border: 1px solid rgba(0,119,190,.20);
+      box-shadow: 0 10px 35px rgba(2,8,23,.08);
+      margin-bottom: 18px;
+      position: relative;
+      overflow:hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(800px 160px at 20% 0%, rgba(0,168,224,.40), transparent 55%);
+      pointer-events:none;
+    }
+
+    .heroTop{
+      position:relative;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .brandblock{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      max-width: 820px;
+    }
+    .title{
+      margin:0;
+      font-size: clamp(22px, 2.6vw, 34px);
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      color: #031525;
+    }
+    .subtitle{
+      margin:0;
+      color: rgba(3,21,37,.72);
+      font-size: 14.5px;
+      line-height: 1.45;
+    }
+    .badge{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0,119,190,.28);
+      border-radius: 999px;
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(10px);
+      color:#0B3B57;
+      font-size: 12.5px;
+      white-space: nowrap;
+      height: fit-content;
+      font-weight: 650;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg, var(--att-blue), var(--att-blue-deep));
+      box-shadow: 0 0 0 4px rgba(0,168,224,.14);
+    }
+
+    /* Main Card */
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      border: 1px solid rgba(2,8,23,.08);
+    }
+
+    .cardhead{
+      padding: 20px 22px;
+      background:
+        linear-gradient(135deg, rgba(0,168,224,.10), rgba(0,119,190,.06)),
+        linear-gradient(0deg, #ffffff, #ffffff);
+      border-bottom: 1px solid var(--line);
+    }
+    .cardhead h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      color:#062033;
+    }
+    .cardhead p{
+      margin:8px 0 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.5;
+      max-width: 900px;
+    }
+
+    .content{
+      padding: 20px 22px 24px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+    }
+
+    /* Panels */
+    .panel{
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      overflow:hidden;
+    }
+    .panel .paneltitle{
+      padding: 13px 14px;
+      font-weight: 750;
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: var(--soft);
+      border-bottom: 1px solid var(--line);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color:#0B3B57;
+    }
+    .panel .paneltitle small{
+      font-weight: 600;
+      color: rgba(11,59,87,.65);
+      text-transform:none;
+      letter-spacing: 0;
+    }
+    .panelbody{
+      padding: 14px 14px 16px;
+    }
+
+    /* Inputs */
+    .inputs{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 160px;
+      gap: 12px;
+      align-items:center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .row:hover{ background: #FBFEFF; border-color: rgba(0,168,224,.25); }
+    .labelblock{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .labelblock .label{
+      font-weight: 750;
+      font-size: 13.5px;
+      color: #0F172A;
+      line-height: 1.2;
+    }
+    .labelblock .hint{
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .hint .payout{
+      font-family: var(--mono);
+      color: #05273F;
+      background: rgba(0,168,224,.08);
+      border: 1px solid rgba(0,168,224,.22);
+      padding: 2px 8px;
+      border-radius: 999px;
+      display:inline-block;
+      font-weight: 700;
+    }
+
+    input[type="number"]{
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 16px;
+      border: 1px solid #D1D5DB;
+      border-radius: 12px;
+      outline: none;
+      transition: box-shadow .2s, border-color .2s;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      background: #ffffff;
+    }
+    input[type="number"]:focus{
+      border-color: rgba(0,119,190,.7);
+      box-shadow: 0 0 0 4px rgba(0,168,224,.18);
+    }
+
+    /* Results */
+    .summary{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .total{
+      border-radius: 14px;
+      padding: 16px 16px;
+      background:
+        radial-gradient(900px 200px at 0% 0%, rgba(0,168,224,.20), transparent 55%),
+        linear-gradient(135deg, rgba(0,168,224,.16), rgba(0,119,190,.12));
+      border: 1px solid rgba(0,119,190,.18);
+    }
+    .total .kicker{
+      color: rgba(3,21,37,.70);
+      font-size: 12.5px;
+      margin-bottom: 8px;
+      font-weight: 650;
+      letter-spacing: .02em;
+    }
+    .total .amount{
+      font-size: 36px;
+      letter-spacing: -0.03em;
+      font-weight: 900;
+      line-height: 1.05;
+      color:#031525;
+    }
+    .total .meta{
+      margin-top: 10px;
+      color: rgba(3,21,37,.62);
+      font-size: 13px;
+    }
+
+    .breakdown{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      max-height: 420px;
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .chip{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: #fff;
+    }
+    .chipTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .chipTop .name{
+      font-weight: 800;
+      font-size: 13.5px;
+      line-height: 1.2;
+      color:#0B3B57;
+    }
+    .chipTop .money{
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color:#031525;
+    }
+    .chip .calc{
+      color: var(--muted);
+      font-size: 12.5px;
+      font-family: var(--mono);
+    }
+
+    .empty{
+      border: 1px dashed rgba(0,119,190,.35);
+      background: rgba(0,168,224,.06);
+      color: rgba(3,21,37,.70);
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.35;
+    }
+
+    /* Table */
+    .tablewrap{
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      overflow:hidden;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      background:#fff;
+    }
+    thead{
+      background: linear-gradient(135deg, var(--att-blue), var(--att-blue-deep));
+      color: #ffffff;
+    }
+    th, td{
+      padding: 14px 14px;
+      text-align:left;
+      border-bottom: 1px solid var(--line);
+      font-size: 13.5px;
+    }
+    tbody tr:hover{ background: #FBFEFF; }
+    tbody tr:last-child td{ border-bottom:none; }
+    td.payout{
+      font-weight: 900;
+      color: #05273F;
+    }
+
+    /* Notes + footer */
+    .notes{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .note{
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .note h4{
+      margin:0 0 8px 0;
+      font-size: 13.5px;
+      letter-spacing: -0.01em;
+      color:#0B3B57;
+    }
+    .note ul{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    .disclaimer{
+      color: rgba(3,21,37,.62);
+      font-size: 12.5px;
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+
+    .footer{
+      margin-top: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: rgba(3,21,37,.60);
+      font-size: 12.5px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Actions */
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:flex-end;
+      margin-top: 12px;
+    }
+    .btn{
+      appearance:none;
+      border: 1px solid #D1D5DB;
+      background:#fff;
+      color:#0F172A;
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 750;
+      cursor:pointer;
+      transition: transform .06s ease, box-shadow .2s, border-color .2s;
+    }
+    .btn:hover{
+      border-color: rgba(0,119,190,.45);
+      box-shadow: 0 10px 24px rgba(2,8,23,.10);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(0,119,190,.38);
+      background: linear-gradient(135deg, rgba(0,168,224,.18), rgba(0,119,190,.14));
+      color:#05273F;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .actions{ justify-content:flex-start; }
+      .row{ grid-template-columns: 1fr 140px; }
+    }
+    @media (max-width: 520px){
+      body{ padding: 26px 12px; }
+      .content{ padding: 16px 14px 18px; }
+      .row{ grid-template-columns: 1fr; }
+      input[type="number"]{ text-align:left; }
+      .total .amount{ font-size: 32px; }
+      .heroTop{ flex-direction: column; }
+    }
+
+    /* Print-friendly */
+    @media print{
+      body{ background:#fff; padding: 0; }
+      .hero{ box-shadow:none; }
+      .badge{ display:none; }
+      .card{ box-shadow:none; border: 1px solid #E5E7EB; }
+      thead{ background: #0B3B57 !important; color:#fff !important; }
+      .actions{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="hero">
+      <div class="heroTop">
+        <div class="brandblock">
+          <h1 class="title">AT&amp;T VAR Program Payout Calculator</h1>
+          <p class="subtitle">
+            Enter expected monthly activations by plan tier to estimate payouts.
+            Payouts are shown per activation and summarized by tier.
+          </p>
+        </div>
+        <div class="badge" aria-label="Version label">
+          <span class="dot"></span>
+          Partner-facing calculator
+        </div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="cardhead">
+        <h2>Estimate Monthly Payouts</h2>
+        <p>
+          Use this calculator to forecast payouts based on activation volume across plan-price tiers.
+          The reference table below lists the payout per activation used in the estimate.
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="grid">
+          <!-- Inputs -->
+          <section class="panel" aria-label="Inputs panel">
+            <div class="paneltitle">
+              <span>Inputs</span>
+              <small>Monthly activations</small>
+            </div>
+
+            <div class="panelbody">
+              <div class="inputs">
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$0.25 – $1.99 plans</div>
+                    <div class="hint">Payout <span class="payout">$1.70</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier1" value="0" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$2.00 – $5.99 plans</div>
+                    <div class="hint">Payout <span class="payout">$6.80</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier2" value="0" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$6.00 – $9.98 plans</div>
+                    <div class="hint">Payout <span class="payout">$12.75</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier3" value="0" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$9.99 – $19.99 plans</div>
+                    <div class="hint">Payout <span class="payout">$63.75</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier4" value="0" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$20.00 – $39.99 plans</div>
+                    <div class="hint">Payout <span class="payout">$148.75</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier5" value="10" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$40.00 – $59.99 plans</div>
+                    <div class="hint">Payout <span class="payout">$212.50</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier6" value="10" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="row">
+                  <div class="labelblock">
+                    <div class="label">$60.00+ plans</div>
+                    <div class="hint">Payout <span class="payout">$297.50</span> per activation</div>
+                  </div>
+                  <input type="number" id="tier7" value="5" min="0" oninput="calculate()" />
+                </div>
+
+                <div class="actions">
+                  <button class="btn" type="button" onclick="resetInputs()">Reset</button>
+                  <button class="btn primary" type="button" onclick="copySummary()">Copy summary</button>
+                  <button class="btn" type="button" onclick="window.print()">Print / Save PDF</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Results -->
+          <section class="panel" aria-label="Results panel">
+            <div class="paneltitle">
+              <span>Results</span>
+              <small>Estimated payouts</small>
+            </div>
+
+            <div class="panelbody">
+              <div class="summary">
+                <div class="total" role="status" aria-live="polite">
+                  <div class="kicker">Total monthly payout</div>
+                  <div class="amount" id="total-amount">$0.00</div>
+                  <div class="meta" id="total-breakdown">Based on 0 total activations</div>
+                </div>
+
+                <div id="tier-results" class="breakdown">
+                  <div class="empty">
+                    Enter activations to see payouts by tier and total payout.
+                  </div>
+                </div>
+
+                <div class="disclaimer">
+                  Estimates are for planning purposes only. Actual payouts may vary based on program terms,
+                  eligibility requirements, and final activation validation.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Reference Table -->
+        <div class="tablewrap" aria-label="Tier payout table">
+          <table>
+            <thead>
+              <tr>
+                <th>AT&amp;T Monthly Rate Plan</th>
+                <th>Payout per Activation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>$0.25 – $1.99</td><td class="payout">$1.70</td></tr>
+              <tr><td>$2.00 – $5.99</td><td class="payout">$6.80</td></tr>
+              <tr><td>$6.00 – $9.98</td><td class="payout">$12.75</td></tr>
+              <tr><td>$9.99 – $19.99</td><td class="payout">$63.75</td></tr>
+              <tr><td>$20.00 – $39.99</td><td class="payout">$148.75</td></tr>
+              <tr><td>$40.00 – $59.99</td><td class="payout">$212.50</td></tr>
+              <tr><td>$60.00+</td><td class="payout">$297.50</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes">
+          <div class="note">
+            <h4>Tips to maximize payouts</h4>
+            <ul>
+              <li>Higher-tier plans drive substantially higher payout per activation.</li>
+              <li>A balanced mix of mid + premium tiers often yields the best blend of volume and value.</li>
+              <li>Use this model in QBRs to align plan mix with revenue targets and compensation goals.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div>© <span id="year"></span> AT&amp;T (Partner estimate tool)</div>
+          <div>AT&amp;T VAR Program Payout Calculator • v1</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Payout structure
+    const tiers = [
+      { name: '$0.25 - $1.99 Plans', payout: 1.70, id: 'tier1' },
+      { name: '$2.00 - $5.99 Plans', payout: 6.80, id: 'tier2' },
+      { name: '$6.00 - $9.98 Plans', payout: 12.75, id: 'tier3' },
+      { name: '$9.99 - $19.99 Plans', payout: 63.75, id: 'tier4' },
+      { name: '$20.00 - $39.99 Plans', payout: 148.75, id: 'tier5' },
+      { name: '$40.00 - $59.99 Plans', payout: 212.50, id: 'tier6' },
+      { name: '$60.00+ Plans', payout: 297.50, id: 'tier7' }
+    ];
+
+    function formatMoney(n){
+      return '$' + n.toFixed(2);
+    }
+
+    function calculate() {
+      let total = 0;
+      let totalActivations = 0;
+      let resultsHTML = '';
+
+      tiers.forEach(tier => {
+        const qty = parseFloat(document.getElementById(tier.id).value) || 0;
+        const earnings = qty * tier.payout;
+
+        if (qty > 0) {
+          total += earnings;
+          totalActivations += qty;
+
+          resultsHTML += `
+            <div class="chip">
+              <div class="chipTop">
+                <div class="name">${tier.name}</div>
+                <div class="money">${formatMoney(earnings)}</div>
+              </div>
+              <div class="calc">${qty} activation${qty !== 1 ? 's' : ''} × ${formatMoney(tier.payout)}</div>
+            </div>
+          `;
+        }
+      });
+
+      if (!resultsHTML) {
+        resultsHTML = `
+          <div class="empty">
+            Enter activations to see payouts by tier and total payout.
+          </div>
+        `;
+      }
+
+      document.getElementById('tier-results').innerHTML = resultsHTML;
+      document.getElementById('total-amount').textContent = formatMoney(total);
+      document.getElementById('total-breakdown').textContent =
+        `Based on ${totalActivations} total activation${totalActivations !== 1 ? 's' : ''}`;
+    }
+
+    function resetInputs(){
+      tiers.forEach(t => document.getElementById(t.id).value = 0);
+      calculate();
+    }
+
+    async function copySummary(){
+      let total = 0;
+      let totalActivations = 0;
+      const lines = [];
+
+      tiers.forEach(tier => {
+        const qty = parseFloat(document.getElementById(tier.id).value) || 0;
+        if (qty > 0) {
+          const earnings = qty * tier.payout;
+          total += earnings;
+          totalActivations += qty;
+          lines.push(`${tier.name}: ${qty} × ${formatMoney(tier.payout)} = ${formatMoney(earnings)}`);
+        }
+      });
+
+      lines.push(`---`);
+      lines.push(`Total activations: ${totalActivations}`);
+      lines.push(`Estimated payout: ${formatMoney(total)}`);
+
+      const text = lines.join('\n');
+
+      try{
+        await navigator.clipboard.writeText(text);
+        alert('Summary copied to clipboard.');
+      }catch(e){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Summary copied to clipboard.');
+      }
+    }
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Initialize
+    calculate();
+  </script>
+</body>
+</html>
